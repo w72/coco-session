@@ -5,7 +5,6 @@ coco session middleware
 ```typescript
 import { App, Router } from "@w72/coco";
 import { session } from "@w72/coco-session";
-import { z } from "zod";
 
 const router = new Router();
 

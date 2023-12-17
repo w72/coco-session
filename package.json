@@ -1,0 +1,17 @@
+{
+  "name": "@w72/coco-session",
+  "version": "1.0.0",
+  "description": "coco session middleware",
+  "exports": "./src/mod.ts",
+  "scripts": {},
+  "keywords": [],
+  "author": "w72e@qq.com",
+  "repository": "github:w72/coco",
+  "license": "MIT",
+  "peerDependencies": {
+    "@w72/coco": "file:../coco"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.3"
+  }
+}

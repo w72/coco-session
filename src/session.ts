@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getSimpleStore } from "./utils";
+import { DEFAULT_COOKIE_NAME, DEFAULT_MAX_AGE } from "./constants";
 
 import type { Middleware } from "@w72/coco";
 import type { Params, Session } from "./types";
@@ -11,12 +12,12 @@ declare module "@w72/coco" {
   }
 }
 
-export function session(params?: Params): Middleware {
+export function session(params: Params = {}): Middleware {
   const {
     store = getSimpleStore(),
-    maxAge = 30 * 24 * 60 * 60,
-    cookieName = "coco_session_id",
-  } = params ?? {};
+    maxAge = DEFAULT_MAX_AGE,
+    cookieName = DEFAULT_COOKIE_NAME,
+  } = params;
 
   return async (ctx, next) => {
     const sessionID = ctx.cookies[cookieName];
@@ -44,7 +45,6 @@ export function session(params?: Params): Middleware {
     await next();
 
     const nextSessionData = ctx.session;
-
     const needClear = sessionID && !Object.keys(nextSessionData).length;
 
     if (needClear) {

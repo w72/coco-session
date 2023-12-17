@@ -9,7 +9,7 @@
   "repository": "github:w72/coco",
   "license": "MIT",
   "peerDependencies": {
-    "@w72/coco": "file:../coco"
+    "@w72/coco": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "^18.19.3"

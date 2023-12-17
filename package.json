@@ -6,7 +6,7 @@
   "scripts": {},
   "keywords": [],
   "author": "w72e@qq.com",
-  "repository": "github:w72/coco",
+  "repository": "github:w72/coco-session",
   "license": "MIT",
   "peerDependencies": {
     "@w72/coco": "^1.0.4"

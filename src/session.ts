@@ -1,10 +1,14 @@
 import { randomUUID } from "node:crypto";
 
-import { getSimpleStore } from "./utils";
-import { DEFAULT_COOKIE_NAME, DEFAULT_MAX_AGE } from "./constants";
+import { getLRUCacheStore } from "./utils";
+import {
+  DEFAULT_COOKIE_NAME,
+  DEFAULT_MAX_AGE,
+  DEFAULT_RENEW,
+} from "./constants";
 
 import type { Middleware } from "@w72/coco";
-import type { Params, Session } from "./types";
+import type { Params } from "./types";
 
 declare module "@w72/coco" {
   interface Context {
@@ -14,64 +18,70 @@ declare module "@w72/coco" {
 
 export function session(params: Params = {}): Middleware {
   const {
-    store = getSimpleStore(),
+    store = getLRUCacheStore(),
+    renew = DEFAULT_RENEW,
     maxAge = DEFAULT_MAX_AGE,
     cookieName = DEFAULT_COOKIE_NAME,
   } = params;
 
-  return async (ctx, next) => {
-    const sessionID = ctx.cookies[cookieName];
+  const maxAgeMs = maxAge * 1000;
 
+  return async (ctx, next) => {
     let sessionData: Record<string, unknown> = {};
     let needRenew: boolean = false;
+    let isExpired: boolean = false;
+    let isSessionExist: boolean = false;
+
+    const sessionID = ctx.cookies[cookieName];
 
     if (sessionID) {
-      const sessionStr = await store.get(sessionID);
-      if (sessionStr) {
-        const sessionVal: Session = JSON.parse(sessionStr);
-        const restTime = sessionVal.expires - Date.now();
+      const sessionItem = await store.get(sessionID);
+      if (sessionItem) {
+        isSessionExist = true;
+        const restTime = sessionItem.expires - Date.now();
         if (restTime > 0) {
-          sessionData = sessionVal.data;
-          if (restTime < (sessionVal.maxAge * 1000) / 3) {
+          sessionData = sessionItem.data;
+          if (restTime < maxAgeMs * renew) {
             needRenew = true;
           }
+        } else {
+          isExpired = true;
         }
       }
     }
 
-    ctx.session = sessionData;
-    const prevSessionData = Object.assign({}, sessionData);
+    ctx.session = { ...sessionData };
 
     await next();
 
     const nextSessionData = ctx.session;
-    const needClear = sessionID && !Object.keys(nextSessionData).length;
+    const isNextSessionDataEmpty = !Object.keys(nextSessionData).length;
 
-    if (needClear) {
+    if (sessionID && isNextSessionDataEmpty) {
       ctx.setCookie(cookieName, "", { maxAge: 0 });
-      await store.del(sessionID);
+
+      if (isSessionExist) await store.del(sessionID);
+
       return;
     }
 
     const isSessionChanged =
-      Object.keys(prevSessionData).length !==
-        Object.keys(nextSessionData).length ||
-      Object.entries(prevSessionData).some(
-        ([k, v]) => v !== nextSessionData![k]
-      );
+      Object.keys(sessionData).length !== Object.keys(nextSessionData).length ||
+      Object.entries(sessionData).some(([k, v]) => v !== nextSessionData[k]);
 
     if (isSessionChanged || needRenew) {
       const nextSessionID = randomUUID();
+
       ctx.setCookie(cookieName, nextSessionID, { maxAge });
 
-      if (isSessionChanged) {
-        const nextSessionStr = JSON.stringify({
-          maxAge,
-          expires: Date.now() + maxAge * 1000,
-          data: nextSessionData,
-        });
-        await store.set(nextSessionID, nextSessionStr);
-      }
+      await store.set(nextSessionID, {
+        data: nextSessionData,
+        expires: Date.now() + maxAgeMs,
+      });
+    }
+
+    if (sessionID && (isSessionChanged || needRenew || isExpired)) {
+      await store.del(sessionID);
     }
   };
 }

@@ -1,14 +1,24 @@
-import { Store } from "./types";
+import { LRUCache } from "lru-cache";
 
-export function getSimpleStore(): Store {
-  const data: Record<string, string> = {};
+import { DEFAULT_CACHE_MAX } from "./constants";
+import { SessionStore, SessionStoreItem } from "./types";
+
+export function getLRUCacheStore(
+  options?: LRUCache.Options<string, SessionStoreItem, unknown>
+): SessionStore {
+  const data = new LRUCache<string, SessionStoreItem>(
+    options ?? { max: DEFAULT_CACHE_MAX }
+  );
+
   return {
-    get: async (k) => data[k],
-    set: async (k, v) => {
-      data[k] = v;
+    get(id) {
+      return data.get(id);
     },
-    del: async (k) => {
-      delete data[k];
+    set(id, item) {
+      data.set(id, item);
+    },
+    del(id) {
+      data.delete(id);
     },
   };
 }

@@ -1,6 +1,6 @@
 {
   "name": "@w72/coco-session",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "coco session middleware",
   "exports": "./src/mod.ts",
   "scripts": {},
@@ -8,6 +8,9 @@
   "author": "w72e@qq.com",
   "repository": "github:w72/coco-session",
   "license": "MIT",
+  "dependencies": {
+    "lru-cache": "^10.1.0"
+  },
   "peerDependencies": {
     "@w72/coco": "^1.0.4"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@w72/coco-session",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "coco session middleware",
   "exports": "./src/mod.ts",
   "scripts": {},

@@ -8,11 +8,11 @@ import {
 } from "./constants";
 
 import type { Middleware } from "@w72/coco";
-import type { Params } from "./types";
+import type { Params, Session } from "./types";
 
 declare module "@w72/coco" {
   interface Context {
-    session: Record<string, unknown>;
+    session: Session;
   }
 }
 
@@ -27,7 +27,7 @@ export function session(params: Params = {}): Middleware {
   const maxAgeMs = maxAge * 1000;
 
   return async (ctx, next) => {
-    let sessionData: Record<string, unknown> = {};
+    let sessionData: Session = {};
     let needRenew: boolean = false;
     let isExpired: boolean = false;
     let isSessionExist: boolean = false;
